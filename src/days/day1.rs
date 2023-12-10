@@ -1,26 +1,20 @@
-pub fn solution1(input:Vec<String>)->u32{
-    let mut output:Vec<u32> = Vec::new();
-    for line in input{
-        let chars: Vec<char> = line.chars()
-            .filter(|d| d.is_numeric())
-            .collect();
-        let first = chars.first().unwrap();
-        let last = if let Some(last) = chars.last() {
-            last
-        }
-        else {
-            first
-        };
-        let callibration:u32 = format!("{}{}",first,last).parse().unwrap();// chars.last()
-        output.push(callibration);
-    }
-    
-    output.iter().sum()
+pub fn solution1(input: Vec<String>) -> u32 {
+    let mut output: Vec<u32> = Vec::new();
 
+    for line in input {
+        let chars: Vec<char> = line.chars().filter(|d| d.is_numeric()).collect();
+        let first = chars.first().unwrap();
+        let last = if let Some(last) = chars.last() { last } else { first };
+        let calibration: u32 = format!("{}{}", first, last).parse().unwrap(); // chars.last()
+        output.push(calibration);
+    }
+
+    output.iter().sum()
 }
 
-fn replace_numbers(input: String) -> String{
-    input.replace("one", "o1e")
+fn replace_numbers(input: String) -> String {
+    input
+        .replace("one", "o1e")
         .replace("two", "t2o")
         .replace("three", "t3e")
         .replace("four", "4")
@@ -31,9 +25,9 @@ fn replace_numbers(input: String) -> String{
         .replace("nine", "n9e")
 }
 
-pub fn solution2(input:Vec<String>)->u32{
+pub fn solution2(input: Vec<String>) -> u32 {
     let mut parsed = Vec::new();
-    
+
     for line in input {
         parsed.push(replace_numbers(line));
     }

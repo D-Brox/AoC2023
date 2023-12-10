@@ -1,5 +1,5 @@
-use pest_derive::Parser as DeriveParser;
 use pest::Parser;
+use pest_derive::Parser as DeriveParser;
 
 #[derive(DeriveParser)]
 #[grammar = "days/day3.pest"]
@@ -14,100 +14,114 @@ struct Numbers {
 }
 
 impl Numbers {
-    fn in_range(&self,(x,y):(usize,usize)) -> Option<usize> {
-        if self.top <=x && self.bottom >=x && self.left <=y && self.right >=y {
+    fn in_range(&self, (x, y): (usize, usize)) -> Option<usize> {
+        if self.top <= x && self.bottom >= x && self.left <= y && self.right >= y {
             Some(self.number)
-        }
-        else {
+        } else {
             None
         }
     }
 }
 
-fn parser(input: String, idx:usize, gear:bool) -> (Vec<Numbers>,Vec<(usize,usize)>) {
-    let top = if idx == 0 {0} else {idx-1};
-    let bottom = idx+1;
+fn parser(input: String, idx: usize, gear: bool) -> (Vec<Numbers>, Vec<(usize, usize)>) {
+    let top = if idx == 0 { 0 } else { idx - 1 };
+    let bottom = idx + 1;
+
     let pairs = GamesParser::parse(Rule::schematic, &input)
         .unwrap()
         .next()
         .unwrap()
         .into_inner();
+
     let mut numbers = Vec::new();
     let mut symbols = Vec::new();
-    for pair in pairs{
+    for pair in pairs {
         match pair.as_rule() {
             Rule::line => {
                 let pairs = pair.into_inner();
                 for pair in pairs {
                     match pair.as_rule() {
                         Rule::number => {
-                            let number:usize = pair.as_str().parse().unwrap();
+                            let number: usize = pair.as_str().parse().unwrap();
                             let span = pair.as_span();
-                            let mut start:usize = span.start();
-                            start = if start == 0 {0} else {start-1};
-                            let end:usize = span.end();
-                            numbers.push(Numbers{number,top,left:start,bottom,right:end});
+                            let mut start: usize = span.start();
+                            start = if start == 0 { 0 } else { start - 1 };
+                            let end: usize = span.end();
+                            numbers.push(Numbers {
+                                number,
+                                top,
+                                left: start,
+                                bottom,
+                                right: end,
+                            });
                         },
                         Rule::symbol => {
                             if gear && pair.as_str() != "*" {
-                                continue
+                                continue;
                             }
                             let span = pair.as_span();
-                            let start:usize = span.start();
-                            symbols.push((idx,start));
+                            let start: usize = span.start();
+                            symbols.push((idx, start));
                         },
-                        _ => unreachable!()                        
+                        _ => unreachable!(),
                     };
                 }
             },
             Rule::EOI => (),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
     }
 
-    (numbers,symbols)
-
+    (numbers, symbols)
 }
 
-pub fn solution1(input:Vec<String>)->usize{
+pub fn solution1(input: Vec<String>) -> usize {
     let mut value: usize = 0;
+
     let mut numbers = Vec::new();
     let mut symbols = Vec::new();
-    for (i,line) in input.iter().enumerate(){
-        let (mut n,mut s) = parser(line.to_string(),i,false);
+
+    for (i, line) in input.iter().enumerate() {
+        let (mut n, mut s) = parser(line.to_string(), i, false);
         numbers.append(&mut n);
         symbols.append(&mut s);
     }
-    for number in numbers{
-        for &symbol in &symbols{
-            if let Some(v) = number.in_range(symbol){
+
+    for number in numbers {
+        for &symbol in &symbols {
+            if let Some(v) = number.in_range(symbol) {
                 value += v;
-                break
+                break;
             }
         }
     }
+
     value
 }
 
-pub fn solution2(input:Vec<String>)->usize{
+pub fn solution2(input: Vec<String>) -> usize {
     let mut value: usize = 0;
+
     let mut numbers = Vec::new();
     let mut symbols = Vec::new();
-    for (i,line) in input.iter().enumerate(){
-        let (mut n,mut s) = parser(line.to_string(),i,false);
+
+    for (i, line) in input.iter().enumerate() {
+        let (mut n, mut s) = parser(line.to_string(), i, false);
         numbers.append(&mut n);
         symbols.append(&mut s);
     }
-    for &symbol in &symbols{
+
+    for &symbol in &symbols {
         let mut val = Vec::new();
-        for number in &numbers{
-            if let Some(v) = number.in_range(symbol){
+        for number in &numbers {
+            if let Some(v) = number.in_range(symbol) {
                 val.push(v);
             }
         }
         if val.len() == 2 {
-            value += val[0]*val[1];
+            value += val[0] * val[1];
         }
     }
+
     value
 }
