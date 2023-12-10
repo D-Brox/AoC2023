@@ -8,6 +8,14 @@ use seq_macro::seq;
 mod days;
 use days::*;
 
+fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
+}
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
@@ -20,6 +28,7 @@ enum Part {
     Part1,
     Part2,
 }
+
 seq!( N in 1..=25 {
     #[derive(Subcommand)]
     enum Commands {
@@ -33,14 +42,6 @@ seq!( N in 1..=25 {
         )*
     }
 });
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
-}
 
 fn main() {
     let cli = Cli::parse();
