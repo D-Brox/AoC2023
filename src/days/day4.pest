@@ -1,0 +1,5 @@
+card = {SOI ~ "Card" ~ number ~ ":" ~ win ~ "|" ~ mine ~ EOI}
+win = {number+}
+mine = {number+}
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " " }

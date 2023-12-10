@@ -1,0 +1,5 @@
+schematic = {SOI ~ line ~ EOI}
+line = {(symbol|number) ~ (symbol|number)* }
+symbol = {"@"|"/"|"%"|"#"|"&"|"*"|"="|"-"|"+"|"$"}
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ "." }

@@ -1,0 +1,5 @@
+game = {SOI ~ "Game" ~ number ~ ":" ~ set ~ (";" ~ set)* ~ EOI}
+set = {(number ~ color) ~ ("," ~ number ~ color)*}
+color = {"green"|"blue"|"red"}
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " " }

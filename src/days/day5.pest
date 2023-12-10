@@ -1,0 +1,6 @@
+almanac = {SOI ~ seeds ~ map+ ~ EOI}
+seeds = {"seeds:" ~ number+ }
+map = { (ASCII_ALPHA|"-")+ ~ ":" ~ range+ }
+range = {number ~ number ~ number}
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " "| NEWLINE }

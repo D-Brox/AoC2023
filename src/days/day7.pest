@@ -1,0 +1,4 @@
+bet = {SOI ~ hand ~ number ~ EOI}
+hand = { ASCII_ALPHANUMERIC{5} }
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " "| NEWLINE }

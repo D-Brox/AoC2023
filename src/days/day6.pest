@@ -1,0 +1,5 @@
+competition = {SOI ~ times ~ distances ~ EOI}
+times = {"Time:" ~ number+ }
+distances = {"Distance:" ~ number+}
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ " "| NEWLINE }

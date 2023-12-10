@@ -1,0 +1,6 @@
+network = {SOI ~ navigation ~ map+ ~ EOI}
+navigation = ${direction+}
+direction = {"L"|"R"}
+map = { node ~ "=" ~ "(" ~ node ~ "," ~ node ~ ")" }
+node = @{(ASCII_ALPHA|"-"){3}}
+WHITESPACE = _{ " "| NEWLINE }
