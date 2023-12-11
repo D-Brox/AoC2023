@@ -117,6 +117,7 @@ pub fn solution1(input: Vec<String>) -> usize {
         }
     }
 
+    // Remove broken pipes
     for (i, l) in grid.clone().iter().cloned().enumerate() {
         for (j, n) in l.iter().enumerate() {
             // println!("{i} {j}");
@@ -138,6 +139,7 @@ pub fn solution1(input: Vec<String>) -> usize {
     let mut queue: VecDeque<((usize, usize), usize)> = [(start, 0)].into();
     let mut max_dist = 0;
 
+    // Explore pipes
     while !queue.is_empty() {
         let (node, distance) = queue.pop_front().unwrap();
         let Node {
@@ -185,9 +187,9 @@ pub fn solution2(input: Vec<String>) -> usize {
         }
     }
 
+    // Remove broken pipes
     for (i, l) in grid.clone().iter().cloned().enumerate() {
         for (j, n) in l.iter().enumerate() {
-            // println!("{i} {j}");
             if j + 1 == l.len() || (n.right && !l[j + 1].left) {
                 grid[i][j].right = false;
             }
@@ -211,13 +213,16 @@ pub fn solution2(input: Vec<String>) -> usize {
                 top: false,
                 bottom: false
             };
-            grid.first().unwrap().len()
+            grid[0].len()
         ];
         grid.len()
     ];
+
     nest_grid[start.0][start.1] = grid[start.0][start.1];
     let mut queue: VecDeque<((usize, usize), usize)> = [(start, 0)].into();
     let mut last = (start, 1);
+
+    // Filter out nodes that are not in the loop
     while !queue.is_empty() {
         let (node, distance) = queue.pop_front().unwrap();
         if (node, distance) != last {
@@ -255,6 +260,7 @@ pub fn solution2(input: Vec<String>) -> usize {
 
     let mut inside = 0;
 
+    // Ray casting algorithm
     for line in nest_grid {
         let mut last_vertical = None;
         let mut outside = true;
