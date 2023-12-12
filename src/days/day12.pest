@@ -1,0 +1,4 @@
+springs = {SOI ~ spring+ ~ number ~ ("," ~ number)+ ~ EOI}
+number =  @{ ASCII_DIGIT+ }
+spring = {"."|"#"|"?"}
+WHITESPACE = _{ " "| NEWLINE }
