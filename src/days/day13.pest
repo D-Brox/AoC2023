@@ -1,0 +1,6 @@
+lava = {SOI ~ pattern+ ~ EOI}
+pattern = ${line ~ (NEWLINE ~ line)+ }
+line = ${(ash|rock)+}
+ash = {"."}
+rock = {"#"}
+WHITESPACE = _{ NEWLINE ~ NEWLINE }

@@ -33,7 +33,7 @@ fn parse(input: String) -> (Vec<Spring>, Vec<usize>) {
     let mut counts = Vec::new();
     for pair in pairs {
         match pair.as_rule() {
-            Rule::spring => springs.extend(pair.as_str().chars().map(|c| Spring::from(c))),
+            Rule::spring => springs.extend(pair.as_str().chars().map(Spring::from)),
             Rule::number => counts.push(pair.as_str().parse().unwrap()),
             Rule::EOI => (),
             _ => unreachable!(),
@@ -52,14 +52,12 @@ fn search_matches((mut row, counts): (Vec<Spring>, Vec<usize>)) -> usize {
     }
 
     // Extend end for result
-    let mut total_possible = vec![0; row.len() + 1];
     let first = row
         .iter()
         .position(|&x| x == Spring::Damaged)
         .unwrap_or(row.len());
-    for i in 0..(first + 1) {
-        total_possible[i] = 1;
-    }
+    let mut total_possible = vec![1; first + 1];
+    total_possible.append(&mut vec![0; row.len() - first]);
 
     for count in counts {
         let mut next_total = vec![0; row.len() + 1];
@@ -94,7 +92,6 @@ pub fn solution1(input: Vec<String>) -> usize {
     input
         .iter()
         .map(|l| search_matches(parse(l.to_owned())))
-        .into_iter()
         .sum()
 }
 
@@ -108,6 +105,5 @@ pub fn solution2(input: Vec<String>) -> usize {
             let l = row.join("?") + " " + &counts.join(",");
             search_matches(parse(l))
         })
-        .into_iter()
         .sum()
 }
