@@ -97,7 +97,7 @@ fn count(platform: Vec<Vec<Platform>>) -> usize {
 pub fn solution1(input: Vec<String>) -> usize {
     let mut platform = parse(input);
     platform = tilt(platform, false);
-    
+
     count(platform)
 }
 
