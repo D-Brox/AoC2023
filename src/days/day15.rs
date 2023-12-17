@@ -46,23 +46,21 @@ pub fn solution2(input: Vec<String>) -> u64 {
             let s = s.strip_suffix('-').unwrap();
             (s, Step(s.as_bytes()), None)
         };
-        
+
         let mut hasher = HolidayHasher::new();
         step.hash(&mut hasher);
         let hash = hasher.finish() as usize;
 
         let lbox = hashmap.get_mut(hash).unwrap();
-        
+
         if let Some(n) = n {
             if let Some(idx) = lbox.iter().position(|(k, _)| k == &s) {
                 lbox[idx] = (s, n);
             } else {
                 lbox.push((s, n));
             }
-        } else {
-            if let Some(idx) = lbox.iter().position(|(k, _)| k == &s) {
-                lbox.remove(idx);
-            }
+        } else if let Some(idx) = lbox.iter().position(|(k, _)| k == &s) {
+            lbox.remove(idx);
         }
     }
 
