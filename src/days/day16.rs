@@ -1,8 +1,5 @@
-use std::collections::VecDeque;
-use std::ops::Not;
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-enum MirrorSplit {
+#[derive(Debug, Clone, Copy)]
+enum Tile {
     Positive,
     Negative,
     Horizontal,
@@ -10,75 +7,81 @@ enum MirrorSplit {
     Empty,
 }
 
-impl From<char> for MirrorSplit {
+impl From<char> for Tile {
     fn from(value: char) -> Self {
         match value {
-            '.' => MirrorSplit::Empty,
-            '|' => MirrorSplit::Vertical,
-            '-' => MirrorSplit::Horizontal,
-            '/' => MirrorSplit::Negative,
-            '\\' => MirrorSplit::Positive,
+            '.' => Tile::Empty,
+            '|' => Tile::Vertical,
+            '-' => Tile::Horizontal,
+            '/' => Tile::Negative,
+            '\\' => Tile::Positive,
             _ => unreachable!(),
         }
     }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-enum Direction {
+enum Sign {
     Positive,
     Negative,
 }
 
-impl Not for Direction {
+impl std::ops::Not for Sign {
     type Output = Self;
 
     fn not(self) -> Self::Output {
         match self {
-            Direction::Positive => Direction::Negative,
-            Direction::Negative => Direction::Positive,
+            Sign::Positive => Sign::Negative,
+            Sign::Negative => Sign::Positive,
         }
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 
-enum Ray {
-    Horizontal(Direction),
-    Vertical(Direction),
+enum Direction {
+    Horizontal,
+    Vertical,
 }
 
-impl Ray {
-    fn next(self, x: usize, y: usize, v: usize, h: usize) -> Option<(usize, usize)> {
+impl std::ops::Not for Direction {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
         match self {
-            Ray::Vertical(Direction::Negative) => {
+            Direction::Horizontal => Direction::Vertical,
+            Direction::Vertical => Direction::Horizontal,
+        }
+    }
+}
+
+struct Beam(Direction, Sign);
+
+impl Beam {
+    fn next(self, x: usize, y: usize, v: usize, h: usize) -> Option<(usize, usize, Self)> {
+        match self {
+            Beam(Direction::Vertical, Sign::Negative) => {
                 if x > 0 {
-                    Some((x - 1, y))
-                } else {
-                    None
+                    return Some((x - 1, y, self));
                 }
             },
-            Ray::Vertical(Direction::Positive) => {
+            Beam(Direction::Vertical, Sign::Positive) => {
                 if x + 1 < v {
-                    Some((x + 1, y))
-                } else {
-                    None
+                    return Some((x + 1, y, self));
                 }
             },
-            Ray::Horizontal(Direction::Negative) => {
+            Beam(Direction::Horizontal, Sign::Negative) => {
                 if y > 0 {
-                    Some((x, y - 1))
-                } else {
-                    None
+                    return Some((x, y - 1, self));
                 }
             },
-            Ray::Horizontal(Direction::Positive) => {
+            Beam(Direction::Horizontal, Sign::Positive) => {
                 if y + 1 < h {
-                    Some((x, y + 1))
-                } else {
-                    None
+                    return Some((x, y + 1, self));
                 }
             },
         }
+        None
     }
 }
 
@@ -102,165 +105,116 @@ impl Energized {
         }
     }
 
-    fn set_direction(&mut self, ray: Ray) -> bool {
-        match ray {
-            Ray::Horizontal(Direction::Negative) => {
-                if !self.energy {
+    fn overlap(&mut self, beam: &Beam) -> bool {
+        match &beam {
+            Beam(Direction::Vertical, Sign::Negative) => {
+                if !self.energy || !self.left {
                     self.left = true;
                     self.energy = true;
-                    false
-                } else if !self.left {
-                    self.left = true;
-                    false
-                } else {
-                    true
+                    return false;
                 }
             },
-            Ray::Horizontal(Direction::Positive) => {
-                if !self.energy {
+            Beam(Direction::Vertical, Sign::Positive) => {
+                if !self.energy || !self.right {
                     self.energy = true;
                     self.right = true;
-                    false
-                } else if !self.right {
-                    self.right = true;
-                    false
-                } else {
-                    true
+                    return false;
                 }
             },
-            Ray::Vertical(Direction::Negative) => {
-                if !self.energy {
+            Beam(Direction::Horizontal, Sign::Negative) => {
+                if !self.energy || !self.up {
                     self.energy = true;
                     self.up = true;
-                    false
-                } else if !self.up {
-                    self.up = true;
-                    false
-                } else {
-                    true
+                    return false;
                 }
             },
-            Ray::Vertical(Direction::Positive) => {
-                if !self.energy {
+            Beam(Direction::Horizontal, Sign::Positive) => {
+                if !self.energy || !self.down {
                     self.energy = true;
                     self.down = true;
-                    false
-                } else if !self.down {
-                    self.down = true;
-                    false
-                } else {
-                    true
+                    return false;
                 }
             },
         }
+        true
     }
 }
 
-fn search(grid: &Vec<Vec<MirrorSplit>>, mut queue: VecDeque<(usize, usize, Ray)>) -> usize {
+fn search(grid: &Vec<Vec<Tile>>, mut queue: Vec<(usize, usize, Beam)>) -> usize {
     let h = grid[0].len();
     let v = grid.len();
 
     let mut energized = vec![vec![Energized::new(); h]; v];
-    while !queue.is_empty() {
-        let (x, y, ray) = queue.pop_front().unwrap();
-        if !energized[x][y].set_direction(ray) {
-            match (grid[x][y], ray) {
-                (MirrorSplit::Positive, Ray::Horizontal(d)) => {
-                    if let Some((xn, yn)) = Ray::Vertical(d).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Vertical(d)));
-                    }
-                },
-                (MirrorSplit::Positive, Ray::Vertical(d)) => {
-                    if let Some((xn, yn)) = Ray::Horizontal(d).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Horizontal(d)));
-                    }
-                },
-                (MirrorSplit::Negative, Ray::Horizontal(d)) => {
-                    if let Some((xn, yn)) = Ray::Vertical(!d).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Vertical(!d)));
-                    }
-                },
-                (MirrorSplit::Negative, Ray::Vertical(d)) => {
-                    if let Some((xn, yn)) = Ray::Horizontal(!d).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Horizontal(!d)));
-                    }
-                },
-                (MirrorSplit::Horizontal, Ray::Vertical(_)) => {
-                    if let Some((xn, yn)) = Ray::Horizontal(Direction::Negative).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Horizontal(Direction::Negative)));
-                    }
-                    if let Some((xn, yn)) = Ray::Horizontal(Direction::Positive).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Horizontal(Direction::Positive)));
-                    }
-                },
-                (MirrorSplit::Vertical, Ray::Horizontal(_)) => {
-                    if let Some((xn, yn)) = Ray::Vertical(Direction::Negative).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Vertical(Direction::Negative)));
-                    }
-                    if let Some((xn, yn)) = Ray::Vertical(Direction::Positive).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Vertical(Direction::Positive)));
-                    }
-                },
-                (_, Ray::Vertical(d)) => {
-                    if let Some((xn, yn)) = Ray::Vertical(d).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Vertical(d)));
-                    }
-                },
-                (_, Ray::Horizontal(d)) => {
-                    if let Some((xn, yn)) = Ray::Horizontal(d).next(x, y, v, h) {
-                        queue.push_back((xn, yn, Ray::Horizontal(d)));
-                    }
-                },
-            }
+    while let Some((x, y, beam)) = queue.pop() {
+        if energized[x][y].overlap(&beam) {
+            continue;
         }
+        queue.extend(
+            match (grid[x][y], beam) {
+                (Tile::Positive, Beam(d, s)) => vec![Beam(!d, s).next(x, y, v, h)],
+                (Tile::Negative, Beam(d, s)) => vec![Beam(!d, !s).next(x, y, v, h)],
+                (Tile::Horizontal, Beam(Direction::Vertical, s)) => vec![
+                    Beam(Direction::Horizontal, s).next(x, y, v, h),
+                    Beam(Direction::Horizontal, !s).next(x, y, v, h),
+                ],
+                (Tile::Vertical, Beam(Direction::Horizontal, s)) => vec![
+                    Beam(Direction::Vertical, s).next(x, y, v, h),
+                    Beam(Direction::Vertical, !s).next(x, y, v, h),
+                ],
+                (_, b) => vec![b.next(x, y, v, h)],
+            }
+            .into_iter()
+            .flatten(),
+        );
     }
 
     energized
         .iter()
-        .map(|l| {
-            l.iter()
-                .map(|&x| if x.energy { 1 } else { 0 })
-                .sum::<usize>()
-        })
+        .map(|l| l.iter().map(|&x| x.energy as usize).sum::<usize>())
         .sum()
 }
 
-fn parse(input: Vec<String>) -> Vec<Vec<MirrorSplit>> {
-    let mut grid = Vec::new();
-    for line in input {
-        let l = line.chars().map(|i| i.into()).collect();
-        grid.push(l);
-    }
-    grid
-}
-
 pub fn solution1(input: Vec<String>) -> usize {
-    let grid = parse(input);
-
-    let queue: VecDeque<(usize, usize, Ray)> =
-        [(0, 0, Ray::Horizontal(Direction::Positive))].into();
-    search(&grid, queue)
+    let grid = input
+        .iter()
+        .map(|l| l.chars().map(|i| i.into()).collect())
+        .collect();
+    search(
+        &grid,
+        [(0, 0, Beam(Direction::Horizontal, Sign::Positive))].into(),
+    )
 }
 
 pub fn solution2(input: Vec<String>) -> usize {
-    let grid = parse(input);
+    let grid: Vec<Vec<_>> = input
+        .iter()
+        .map(|l| l.chars().map(|i| i.into()).collect())
+        .collect();
 
     let v = grid.len();
     let h = grid[0].len();
     let mut energies = Vec::new();
 
     for x in 0..v {
-        let queue = [(x, 0, Ray::Horizontal(Direction::Positive))].into();
-        energies.push(search(&grid, queue));
-        let queue = [(x, h - 1, Ray::Horizontal(Direction::Negative))].into();
-        energies.push(search(&grid, queue));
+        energies.push(search(
+            &grid,
+            [(x, 0, Beam(Direction::Horizontal, Sign::Positive))].into(),
+        ));
+        energies.push(search(
+            &grid,
+            [(x, h - 1, Beam(Direction::Horizontal, Sign::Negative))].into(),
+        ));
     }
 
     for y in 0..h {
-        let queue = [(0, y, Ray::Vertical(Direction::Positive))].into();
-        energies.push(search(&grid, queue));
-        let queue = [(v - 1, y, Ray::Vertical(Direction::Negative))].into();
-        energies.push(search(&grid, queue));
+        energies.push(search(
+            &grid,
+            [(0, y, Beam(Direction::Vertical, Sign::Positive))].into(),
+        ));
+        energies.push(search(
+            &grid,
+            [(v - 1, y, Beam(Direction::Vertical, Sign::Negative))].into(),
+        ));
     }
 
     energies.iter().max().unwrap().to_owned()
