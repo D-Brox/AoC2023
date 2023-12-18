@@ -22,16 +22,7 @@ impl std::ops::Not for Direction {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-struct Node {
-    coord: Coord,
-    cost: usize,
-    last: Direction,
-    repeat: u8,
-}
-
 #[derive(Hash, Debug, Copy, Clone, Eq, PartialEq)]
-
 struct Coord(usize, usize);
 
 impl Coord {
@@ -62,38 +53,16 @@ impl Coord {
     }
 }
 
-impl Node {
-    fn next(self, grid: &Vec<Vec<usize>>) -> Vec<Self> {
-        let mut next = Vec::new();
-        let v = grid.len();
-        let h = grid[0].len();
-        for direction in [
-            Direction::Down,
-            Direction::Right,
-            Direction::Up,
-            Direction::Left,
-        ] {
-            if self.last == direction && self.repeat == 3 {
-                continue;
-            }
-            if self.last == !direction {
-                continue;
-            }
-            if let Some(coord) = self.coord.next(direction, v, h) {
-                let cost = self.cost + grid[coord.0][coord.1];
-                let repeat = if self.last == direction { self.repeat + 1 } else { 1 };
-                next.push(Node {
-                    coord,
-                    cost,
-                    last: direction,
-                    repeat,
-                })
-            }
-        }
-        next
-    }
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+struct Node {
+    coord: Coord,
+    cost: usize,
+    last: Direction,
+    repeat: u8,
+}
 
-    fn ultra_next(self, grid: &Vec<Vec<usize>>) -> Vec<Self> {
+impl Node {
+    fn next(self, grid: &Vec<Vec<usize>>, ultra: bool) -> Vec<Self> {
         let mut next = Vec::new();
         let v = grid.len();
         let h = grid[0].len();
@@ -103,9 +72,11 @@ impl Node {
             Direction::Up,
             Direction::Left,
         ] {
-            if (self.last != direction && self.repeat < 4)
-                || self.last == !direction
-                || self.last == direction && self.repeat == 10
+            if (!ultra && (self.last == !direction || (self.last == direction && self.repeat == 3)))
+                || (ultra
+                    && (self.last == !direction
+                        || (self.last != direction && self.repeat < 4)
+                        || self.last == direction && self.repeat == 10))
             {
                 continue;
             }
@@ -177,6 +148,6 @@ where
     usize::MAX
 }
 
-pub fn solution1(input: Vec<String>) -> usize { dijkstra(input, |n, grid| n.next(grid)) }
+pub fn solution1(input: Vec<String>) -> usize { dijkstra(input, |n, grid| n.next(grid, false)) }
 
-pub fn solution2(input: Vec<String>) -> usize { dijkstra(input, |n, grid| n.ultra_next(grid)) }
+pub fn solution2(input: Vec<String>) -> usize { dijkstra(input, |n, grid| n.next(grid, true)) }

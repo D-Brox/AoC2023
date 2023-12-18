@@ -1,0 +1,5 @@
+trench = {SOI ~ direction ~ number ~ color ~ EOI}
+direction = {"U"|"D"|"L"|"R"}
+number =  @{ ASCII_DIGIT+ }
+color = ${"(#" ~ HEX_DIGIT{6} ~ ")"}
+WHITESPACE = _{ " "| NEWLINE }
