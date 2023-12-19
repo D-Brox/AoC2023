@@ -1,0 +1,11 @@
+ratings = {SOI ~ workflows ~ parts ~ EOI}
+workflows = ${rule ~ (NEWLINE ~ rule)+ }
+rule = ${code ~ "{" ~ step* ~ code ~ "}" }
+step = ${code ~ condition ~ number ~ ":" ~ code ~ ","}
+code = @{ASCII_ALPHA+}
+condition = {"<"|">"}
+parts = ${part ~ (NEWLINE ~ part)+ }
+part = ${"{" ~ piece ~ ("," ~ piece)+ ~ "}" }
+piece = ${code ~ "=" ~ number}
+number =  @{ ASCII_DIGIT+ }
+WHITESPACE = _{ NEWLINE ~ NEWLINE }
